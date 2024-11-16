@@ -5,7 +5,9 @@
 #include<stdlib.h>
 #include<string.h>
 #include<conio.h>
+#include <unordered_map>
 #include<windows.h>
+#include<ctime>
 
 using namespace std;
 
@@ -29,6 +31,8 @@ class Library
     public:
         NodeB*head=NULL;             //Book pointer
         NodeMember *headM=NULL;          //Member Pointer
+        unordered_map<int, pair<string, time_t>> issuedBooks;  // Maps book ID to customer ID and return date
+
 
         void log();
         void login();
@@ -36,6 +40,9 @@ class Library
         void memberMenu();
         void bookMenu();
         void adminD();
+        void printHeader(); 
+        void issueBook();
+        void showIssuedBooks();  // Function to display issued books
 
         //members methods..
         void addM();
@@ -55,7 +62,107 @@ class Library
 
 };
 
+ void Library::issueBook() {
+    printHeader();
+    if (head == NULL) {
+        cout << "\n\nNo records found!";
+        return;
+    }
+
+    int bookId;
+    string customerId;
+    int days;
+    cout << "Enter Book ID to issue: ";
+    cin >> bookId;
+    cout << "Enter Customer ID: ";
+    cin >> customerId;
+    cout << "Enter Time Limit (in days): ";
+    cin >> days;
+
+    NodeB *ptr = head, *prev = NULL;
+    while (ptr != NULL) {
+        if (ptr->id == bookId) {
+            // Book found
+            cout << "Issuing book:" << endl;
+            cout << "Book ID: " << ptr->id << endl;
+            cout << "Author: " << ptr->author << endl;
+            cout << "Title: " << ptr->name << endl;
+            cout << "Publisher: " << ptr->publisher << endl;
+
+            // Calculate return date
+            time_t now = time(0);
+            time_t returnDate = now + days * 86400; // 86400 seconds per day
+
+            // Add to issuedBooks map
+            issuedBooks[bookId] = {customerId, returnDate};
+
+            // Delete book from library
+            if (ptr == head) {
+                head = head->nextB;
+            } else {
+                prev->nextB = ptr->nextB;
+            }
+            delete ptr;
+
+            cout << "Book issued successfully!\n";
+            return;
+        }
+        prev = ptr;
+        ptr = ptr->nextB;
+    }
+
+    cout << "Book with ID " << bookId << " not found!" << endl;
+}
+
+void Library::showIssuedBooks() {
+    printHeader();
+    if (issuedBooks.empty()) {
+        cout << "\n\nNo books have been issued.";
+        cout << "\nPress Enter to return to the main menu...";
+        cin.ignore();
+        cin.get();
+        bookMenu();
+        return;
+         
+    }
+
+    cout << "Issued Books:\n";
+    for (const auto& issuedBook : issuedBooks) {
+        int bookId = issuedBook.first;
+        string customerId = issuedBook.second.first;
+        time_t returnDate = issuedBook.second.second;
+
+        // Convert return date to readable format
+        char returnDateStr[20];
+        strftime(returnDateStr, sizeof(returnDateStr), "%Y-%m-%d", localtime(&returnDate));
+
+        cout << "Book ID: " << bookId << endl;
+        cout << "Customer ID: " << customerId << endl;
+        cout << "Return Date: " << returnDateStr << endl;
+        cout << "------------------------------------------" << endl;
+    }
+    cout << "\nPress Enter to return to the main menu...";
+    cin.ignore();
+    cin.get();
+    bookMenu();
+
+
+}
+
 HANDLE h=GetStdHandle(STD_OUTPUT_HANDLE);
+
+void Library::printHeader() {
+
+    SetConsoleTextAttribute(h, 5);
+    cout << "\n\n\t\t\t\t\t=====================================================";
+    SetConsoleTextAttribute(h, 1);
+    cout << "\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
+    cout << "\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
+    SetConsoleTextAttribute(h, 5);
+    cout << "\n\n\t\t\t\t\t=====================================================\n\n";
+    SetConsoleTextAttribute(h, 15);  // Reset to default color
+
+}
 
 void Library::memberMenu()
 {
@@ -63,13 +170,7 @@ void Library::memberMenu()
         system("cls");
         int sl;
 
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
+        printHeader(); 
         SetConsoleTextAttribute(h,10);
         cout<<"\n\n\t\t\t\t\t      =======**** Member Section ****=======";
         SetConsoleTextAttribute(h,15);
@@ -123,13 +224,8 @@ void Library::memberMenu()
 void Library::addM()
 {
     system("cls");
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
+        printHeader(); 
+
         NodeMember *new_NodeMember=new NodeMember;
 
         SetConsoleTextAttribute(h,15);
@@ -168,13 +264,9 @@ void Library::searchM()
         system("cls");
 
         int t_Mid,foundM=0;
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
+
+        printHeader();
+
         SetConsoleTextAttribute(h,2);
         if(headM==NULL)
         {
@@ -191,13 +283,8 @@ void Library::searchM()
                 if(t_Mid==ptrm -> Mid)
                 {
                     system("cls");
-                    SetConsoleTextAttribute(h,5);
-                    cout<<"\n\n\t\t\t\t\t=====================================================";
-                    SetConsoleTextAttribute(h,1);
-                    cout<<"\n\n\t\t\t\t\t========***** Library MANAGEMENT SYSTEM *****========";
-                    cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-                    SetConsoleTextAttribute(h,5);
-                    cout<<"\n\n\t\t\t\t\t=====================================================";
+
+                    printHeader(); 
 
                     SetConsoleTextAttribute(h,15);
                     cout<<"\n\n\t Member ID : "<<ptrm -> Mid;
@@ -223,14 +310,8 @@ void Library::updateM()
     system("cls");
 
         int t_Mid,foundM=0;
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";;
-        SetConsoleTextAttribute(h,2);
+
+       printHeader(); 
 
         if(headM==NULL)
         {
@@ -249,14 +330,7 @@ void Library::updateM()
                 {
                     system("cls");
 
-                    SetConsoleTextAttribute(h,5);
-                    cout<<"\n\n\t\t\t\t\t=====================================================";
-                    SetConsoleTextAttribute(h,1);
-                    cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-                    cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-                    SetConsoleTextAttribute(h,5);
-                    cout<<"\n\n\t\t\t\t\t=====================================================";
-                    SetConsoleTextAttribute(h,15);
+                    printHeader(); 
 
                     cout<<"\n\n\t Member ID : ";
                     cin>>ptrm -> Mid;
@@ -288,12 +362,8 @@ void Library::deleteM()
 
         int t_Mid,foundM=0;
         SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
+
+        printHeader(); 
 
         SetConsoleTextAttribute(h,2);
 
@@ -348,13 +418,8 @@ void Library::sortM()
     if(headM==NULL)
     {
         system("cls");
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
+
+        printHeader(); 
 
         SetConsoleTextAttribute(h,2);
 
@@ -406,14 +471,7 @@ void Library::showM()
 {
     system("cls");
 
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,15);
+        printHeader(); 
 
         NodeMember *ptrm =headM;
 
@@ -436,22 +494,17 @@ void Library::bookMenu()
         system("cls");
         int choice;
 
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
+       printHeader(); 
 
-        SetConsoleTextAttribute(h,15);
         cout<<"\n\n\n\t\t\t\t\t\t 1. Insert New Record";
         cout<<"\n\n\t\t\t\t\t\t 2. Search Record";
         cout<<"\n\n\t\t\t\t\t\t 3. Update Record";
         cout<<"\n\n\t\t\t\t\t\t 4. Delete Record";
         cout<<"\n\n\t\t\t\t\t\t 5. Show All Record";
-        cout<<"\n\n\t\t\t\t\t\t 6. Go To Main Menu";
-        cout<<"\n\n\t\t\t\t\t\t 7. Exit";
+        cout<<"\n\n\t\t\t\t\t\t 6. Issue Book";
+        cout<<"\n\n\t\t\t\t\t\t 7. Show All Issued books";
+        cout<<"\n\n\t\t\t\t\t\t 8. Go To Main Menu";
+        cout<<"\n\n\t\t\t\t\t\t 9. Exit";
         cout<<"\n\n\n\t\t\t\t\t\t Enter Your Choice :";
 
         cin>>choice;
@@ -480,11 +533,19 @@ void Library::bookMenu()
             break;
 
         case 6:
-            adminD();
+            issueBook();
             break;
 
         case 7:
+            showIssuedBooks();
             exit(0);
+        
+        case 8:
+            adminD();
+            break;
+        
+        case 9:
+            exit;
         default:
 
             cout<<"\n\n Invalid Choice!....Please Try Again!.......";
@@ -497,14 +558,7 @@ void Library::insert()
 {
         system("cls");
 
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,15);
+        printHeader(); 
 
         NodeB* new_NodeB=new NodeB;
 
@@ -544,15 +598,8 @@ void Library::search()
         system("cls");
 
         int t_id,found=0;
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
 
-        SetConsoleTextAttribute(h,2);
+        printHeader(); 
 
         if(head==NULL)
         {
@@ -571,13 +618,7 @@ void Library::search()
                 {
                     system("cls");
 
-                    SetConsoleTextAttribute(h,5);
-                    cout<<"\n\n\t\t\t\t\t=====================================================";
-                    SetConsoleTextAttribute(h,1);
-                    cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-                    cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-                    SetConsoleTextAttribute(h,5);
-                    cout<<"\n\n\t\t\t\t\t=====================================================";
+                    printHeader(); 
 
                     SetConsoleTextAttribute(h,15);
                     cout<<"\n\n -> Book ID : "<<ptr -> id;
@@ -602,14 +643,8 @@ void Library::update()
         system("cls");
 
         int t_id,found=0;
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,2);
+
+        printHeader(); 
 
         if(head==NULL)
         {
@@ -628,13 +663,7 @@ void Library::update()
                 {
                     system("cls");
 
-                    SetConsoleTextAttribute(h,5);
-                    cout<<"\n\n\t\t\t\t\t=====================================================";
-                    SetConsoleTextAttribute(h,1);
-                    cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-                    cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-                    SetConsoleTextAttribute(h,5);
-                    cout<<"\n\n\t\t\t\t\t=====================================================";
+                    printHeader(); 
 
                     SetConsoleTextAttribute(h,15);
 
@@ -666,14 +695,7 @@ void Library::del()
         system("cls");
 
         int t_id,found=0;
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,2);
+        printHeader(); 
 
         if(head == NULL)
         {
@@ -726,14 +748,8 @@ void Library::sort()
     if(head==NULL)
     {
         system("cls");
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,2);
+
+        printHeader(); 
 
         cout<<"\n\n\t\t\t\t The Linked List is Empty....";
         getch();
@@ -783,13 +799,7 @@ void Library::show()
 {
         system("cls");
 
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
+        printHeader(); 
 
         SetConsoleTextAttribute(h,2);
 
@@ -884,14 +894,7 @@ void Library::login()
         x:
         int slc;
         system("cls");
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-        SetConsoleTextAttribute(h,1);
-        cout<<"\n\n\t\t\t\t\t========***** LIBRARY MANAGEMENT SYSTEM *****========";
-        cout<<"\n\n\t\t\t\t\t=============== THE KNOWLEDGE CORNER ================";
-        SetConsoleTextAttribute(h,5);
-        cout<<"\n\n\t\t\t\t\t=====================================================";
-
+       printHeader(); 
         SetConsoleTextAttribute(h,7);
 
         cout<<"\n\n\t\t\t\t\t\t            1. Library Member ";
