@@ -11,55 +11,54 @@
 
 using namespace std;
 
-class Library
-{
-    private:
-        struct NodeB                        //Books
-        {
-            int id;
-            string name ,author,publisher;
-            NodeB* nextB;
-        };
+class Library {
+private:
+    struct NodeB {
+        int id;
+        string name, author, publisher;
+        NodeB* nextB;
+    };
 
-        struct NodeMember                       //Members
-        {
-            int Mid;
-            string Mname ,MNIC,Maddress;
-            NodeMember *nextM;
-        };
+    struct NodeMember {
+        int Mid;
+        string Mname, MNIC, Maddress;
+        NodeMember* nextM;
+    };
 
-    public:
-        NodeB*head=NULL;             //Book pointer
-        NodeMember *headM=NULL;          //Member Pointer
-        unordered_map<int, pair<string, time_t>> issuedBooks;  // Maps book ID to customer ID and return date
+public:
+    NodeB* head = NULL;            // Book pointer
+    NodeMember* headM = NULL;      // Member pointer
+    unordered_map<int, pair<string, time_t>> issuedBooks; // Maps book ID to customer ID and return date
 
+    void log();
+    void login();
+    void registerA();
+    void memberMenu();
+    void bookMenu();
+    void adminD();
+    void printHeader(); 
+    void issueBook();
+    void showIssuedBooks();
 
-        void log();
-        void login();
-        void registerA();
-        void memberMenu();
-        void bookMenu();
-        void adminD();
-        void printHeader(); 
-        void issueBook();
-        void showIssuedBooks();  // Function to display issued books
+    NodeMember* mergeSort(NodeMember* head);  // Declaration of mergeSort for NodeMember type
+    NodeMember* getMiddle(NodeMember* head) ;
+    NodeMember* merge(NodeMember* left, NodeMember* right);
 
-        //members methods..
-        void addM();
-        void searchM();
-        void updateM();
-        void deleteM();
-        void sortM();
-        void showM();
+    // Members methods
+    void addM();
+    void searchM();
+    void updateM();
+    void deleteM();
+    void sortM();
+    void showM();
 
-        //books methods..
-        void insert();
-        void search();
-        void update();
-        void del();
-        void sort();
-        void show();
-
+    // Books methods
+    void insert();
+    void search();
+    void update();
+    void del();
+    void sort();
+    void show();
 };
 
  void Library::issueBook() {
@@ -415,55 +414,75 @@ void Library::deleteM()
 
 void Library::sortM()
 {
-    if(headM==NULL)
+    if (headM == NULL)
     {
         system("cls");
-
         printHeader(); 
 
-        SetConsoleTextAttribute(h,2);
-
-        cout<<"\n\n Linked List is Empty....";
+        SetConsoleTextAttribute(h, 2);
+        cout << "\n\n Linked List is Empty....";
         getch();
         memberMenu();
+        return;
     }
-    int countM=0,t_Mid;
-    string t_Mname,t_MNIC,t_Maddress;
-    NodeMember *ptrm=headM;
 
-    while(ptrm !=NULL)
-    {
-        countM++;
-        ptrm =ptrm -> nextM;
+    // Apply Merge Sort on the list
+    headM = mergeSort(headM);
+
+    // After sorting, display success message
+    system("cls");
+    printHeader();
+
+    SetConsoleTextAttribute(h, 2);
+    cout << "\n\n Linked List Sorted Successfully....";
+    getch();
+    memberMenu();
+}
+// Definition of mergeSort for NodeMember type
+NodeMember* Library::mergeSort(NodeMember* head) {
+    if (head == NULL || head->nextM == NULL) {
+        return head; // Base case: single element
     }
-    for(int i=1;i<=countM;i++)
-    {
-        NodeMember *ptrm=headM;
-        for(int j=1;j<countM;j++)
-        {
-            if(ptrm -> Mid > ptrm -> nextM ->Mid)
-            {
-                //save data into temporary variables..
-                t_Mid=ptrm ->Mid;
-                t_Mname=ptrm ->Mname;
-                t_MNIC=ptrm ->MNIC;
-                t_Maddress=ptrm ->Maddress;
 
-                //save data into current Node..
-                ptrm->Mid=ptrm->nextM->Mid;
-                ptrm->Mname=ptrm->nextM->Mname;
-                ptrm->MNIC=ptrm->nextM->MNIC;
-                ptrm->Maddress=ptrm->nextM->Maddress;
+    // Split the list into two halves
+    NodeMember* middle = getMiddle(head);
+    NodeMember* secondHalf = middle->nextM;
+    middle->nextM = NULL;
 
-                //save data into next Node..
-                ptrm->nextM->Mid=t_Mid;
-                ptrm->nextM->Mname=t_Mname;
-                ptrm->nextM->MNIC=t_MNIC;
-                ptrm->nextM->Maddress=t_Maddress;
-            }
-            ptrm=ptrm ->nextM;
-        }
+    // Recursively sort the two halves
+    NodeMember* left = mergeSort(head);
+    NodeMember* right = mergeSort(secondHalf);
 
+    // Merge the sorted halves
+    return merge(left, right);
+}
+
+// Helper function to find the middle node
+NodeMember* Library::getMiddle(NodeMember* head) {
+    if (head == NULL) return NULL;
+
+    NodeMember* slow = head;
+    NodeMember* fast = head;
+
+    while (fast != NULL && fast->nextM != NULL) {
+        slow = slow->nextM;
+        fast = fast->nextM->nextM;
+    }
+    return slow;
+}
+
+// Helper function to merge two sorted lists
+NodeMember* Library::merge(NodeMember* left, NodeMember* right) {
+    if (left == NULL) return right;
+    if (right == NULL) return left;
+
+    // Compare the nodes and merge them in sorted order
+    if (left->Mid <= right->Mid) {
+        left->nextM = merge(left->nextM, right);
+        return left;
+    } else {
+        right->nextM = merge(left, right->nextM);
+        return right;
     }
 }
 
